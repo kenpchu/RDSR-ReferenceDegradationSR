@@ -1,1 +1,1 @@
-# RDSR-ReferenceDegradationSR
+# RDSR- Reference Degradation Super-Resolution
