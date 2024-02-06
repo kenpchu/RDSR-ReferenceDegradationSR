@@ -1,5 +1,3 @@
-# RDSR- Reference Degradation Super-Resolution
-
 - Mode: Plug-in
 - Scale: x2
 - Datasets: DIV2KRK
@@ -114,3 +112,5 @@
 | Ref1 | Ref2 | Ref3 | Ref4 | Ref5 |
 | :----: | :----: | :----: | :----: | :----: |
 |![ref1](https://hackmd.io/_uploads/rJ9zWjks6.jpg)|![ref2](https://hackmd.io/_uploads/BkqMZoksa.jpg)|![ref3](https://hackmd.io/_uploads/By9f-o1jT.jpg)|![ref4](https://hackmd.io/_uploads/H1qzZoJi6.jpg)|![ref5](https://hackmd.io/_uploads/r1qf-oysa.jpg)|
+
+
