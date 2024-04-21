@@ -84,7 +84,7 @@
     "tsne_img_count": 50,
     "tsne_ker_count": 5,
     "target_ind": 0,
-    "target_count": 100,
+    "target_count": 2,
     "ref_selection": 1,
     "rgb_range": 1.0,
     "is_normalize": 1,
