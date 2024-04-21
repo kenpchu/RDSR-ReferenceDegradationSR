@@ -5,7 +5,7 @@
 
 | LR | Ground Truth | RDSR | DualSR | Bicubic |
 | :----: | :----: | :----: | :----: | :----: |
-|![16_im_60](https://hackmd.io/_uploads/SkyB0P056.jpg =350x)|![16_zoom1_gt_img_60](https://hackmd.io/_uploads/H1aJowA5T.png =200x)|![16_zoom2_tar_img_60](https://hackmd.io/_uploads/SkakoPAca.png  =230x)|![16_zoom3_com_img_60](https://hackmd.io/_uploads/HkTyiDCq6.png  =230x)|![16_zoom4_bq_img_60](https://hackmd.io/_uploads/S16kjD05a.png =200x)|
+|![](images/plugin_x2/im_60/16_im_60.jpg?raw=true)|![16_zoom1_gt_img_60](https://hackmd.io/_uploads/H1aJowA5T.png =200x)|![16_zoom2_tar_img_60](https://hackmd.io/_uploads/SkakoPAca.png  =230x)|![16_zoom3_com_img_60](https://hackmd.io/_uploads/HkTyiDCq6.png  =230x)|![16_zoom4_bq_img_60](https://hackmd.io/_uploads/S16kjD05a.png =200x)|
 ![16_im_60_](images/plugin_x2/im_60/16_im_60.jpg =350x)
 
 
