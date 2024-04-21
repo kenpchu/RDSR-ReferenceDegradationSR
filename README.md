@@ -58,7 +58,7 @@
 
 | Ref. Imgs | LR | Ground Truth | RDSR | DASR | Bicubic |
 | :----:| :----: | :----: | :----: | :----: | :----: |
-| <img src="images/RDSR_iso_x2/im_45/im_45_ref-combine.jpg" width="100" height="100"> | <img src="images/RDSR_iso_x2/im_45/1_im_45.jpg" width="100" height="100"> |<img src="images/RDSR_iso_x2/im_45/1_zoom1_gt_img_45.jpg" width="100" height="100">|<img src="images/RDSR_iso_x2/im_45/1_zoom2_tar_img_45.jpg" width="100" height="100">|<img src="images/RDSR_iso_x2/im_45/1_zoom3_com_img_45.jpg" width="100" height="100"> |<img src="images/RDSR_iso_x2/im_45/1_zoom5_lr_img_45.jpg" width="100" height="100">|
+| <img src="images/RDSR_iso_x2/im_45/im_45_ref-combine.jpg" width="150" height="150"> | <img src="images/RDSR_iso_x2/im_45/1_im_45.jpg" width="150" height="150"> |<img src="images/RDSR_iso_x2/im_45/1_zoom1_gt_img_45.jpg" width="150" height="150">|<img src="images/RDSR_iso_x2/im_45/1_zoom2_tar_img_45.jpg" width="150" height="150">|<img src="images/RDSR_iso_x2/im_45/1_zoom3_com_img_45.jpg" width="150" height="150"> |<img src="images/RDSR_iso_x2/im_45/1_zoom5_lr_img_45.jpg" width="150" height="150">|
 
 ------------------------------------
 | Mode | Scale | Datasets | Img No. |
