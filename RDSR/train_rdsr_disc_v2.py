@@ -5,7 +5,7 @@ from utils.img_utils import sample_ref_by_color_space, kernel_processing, save_r
 
 from data.data import gen_test_dataloader, gen_train_dataloader_adaptive, gen_dn_train_dataloader
 # from trainer import RDSRTrainer
-from trainer.rdsrdisctrainerv2 import RDSRDiscTrainerV2
+from trainer.rdsrdisctrainerv20 import RDSRDiscTrainerV2
 
 import os
 import glob
