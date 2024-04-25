@@ -19,6 +19,6 @@ mkdir -p log
 # CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=1 python train_rdsr_disc_v43.py \
 #                 --cfg_path cfg/config_rdsr_x4_aniso.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
 
-# RDSR gt x2 aniso         
+# RDSR gt x2 aniso
 # CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=3 python train_gt.py \
 #                 --cfg_path cfg/config_rdsr_x2_aniso_gt.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
