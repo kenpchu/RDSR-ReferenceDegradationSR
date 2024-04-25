@@ -145,6 +145,23 @@ class RDSRDiscTrainerV43(RDSRDiscTrainerV42):
                 # self.save_whole_image(is_dn=False)
 
 
+class RDSRDiscTrainerV431(RDSRDiscTrainerV43):
+    def __init__(self, conf, tb_logger, test_dataloader, filename='', timestamp='', kernel=None):
+        torch.manual_seed(conf.random_seed)
+        super(RDSRDiscTrainerV431, self).__init__(conf, tb_logger, test_dataloader,
+                                                 filename=filename, timestamp=timestamp, kernel=kernel)
+
+        if conf.scale == 4:
+            self.dn_model = make_dn_x4_k33_network(conf).to(self.device)
+            self.optimizer_Dn = torch.optim.Adam(self.dn_model.parameters(), lr=self.conf.lr_dn, betas=(self.conf.beta1, 0.999))
+            self.scheduler_Dn = torch.optim.lr_scheduler.StepLR(self.optimizer_Dn, step_size=self.conf.lrs_step_size, gamma=self.conf.lrs_gamma)
+            self.matrix_scheduler_Dn = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer_Dn, 'min',
+                                                                                  factor=self.conf.lrs_gamma,
+                                                                                  patience=self.conf.lrs_patience,
+                                                                                  cooldown=self.conf.lrs_cooldown,
+                                                                                  min_lr=self.conf.lrs_minlr, verbose=0)
+
+
 class RDSRDiscTrainerV44(RDSRDiscTrainerV43):
     def __init__(self, conf, tb_logger, test_dataloader, filename='', timestamp='', kernel=None):
         torch.manual_seed(conf.random_seed)

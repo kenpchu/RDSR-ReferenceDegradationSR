@@ -1,11 +1,12 @@
 {
-    "input_dir": "../datasets/DIV2K/DIV2K_train_LR_unknown/X2",
+    "input_dir": "../../datasets/DIV2K/DIV2K_train_LR_unknown/X2",
     "output_dir": "train_log",
     "kernel_dir": "",
-    "gt_dir": "../datasets/DIV2K/DIV2K_train_HR",
-    "ref_dir": "../datasets/DIV2KRK/gt",
+    "gt_dir": "../../datasets/DIV2K/DIV2K_train_HR",
+    "ref_dir": "../../datasets/DIV2KRK/gt",
     "ref_select_path": "",
     "target_select_path": "",
+    "ref_random" : 0,
     "input_image_path": "",
     "kernel_path": null,
     "gt_path": null,
@@ -46,6 +47,9 @@
     "pretrained_encoder_path" : "../RDSR/pre-trained_model/model_500_fine.pt",
     "with_dr" : 1,
     "start_dr_iter": 1000,
+    "start_min_loss_iter": 700,
+    "save_img" : 1,
     "colab": 0,
-    "div2k": 1
+    "div2k": 1,
+    "description": "DIV2K ref add-on x2"
 }

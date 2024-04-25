@@ -5,7 +5,7 @@ from utils.img_utils import sample_ref_by_color_space, kernel_processing, save_r
 
 from data.data4 import gen_test_dataloader, gen_train_dataloader_adaptive, gen_dn_train_dataloader
 # from trainer import RDSRTrainer
-from trainer.rdsrdisctrainerv43 import RDSRDiscTrainerV43, RDSRDiscTrainerV44
+from trainer.rdsrdisctrainerv43 import RDSRDiscTrainerV431
 
 import os
 import glob
@@ -154,8 +154,7 @@ def train(conf, tb_logger, tar_path_list, ref_path_list, timestamp='', gt_tar=''
         tar_name = '_'.join(tar.split('_')[:2])
 
         # TODO: to check trainer process
-        # trainer = RDSRDiscTrainerV43(conf, tb_logger, test_dataloader, kernel=ker_gt_path, filename=tar_name, timestamp=timestamp)
-        trainer = RDSRDiscTrainerV44(conf, tb_logger, test_dataloader, kernel=ker_gt_path, filename=tar_name, timestamp=timestamp)
+        trainer = RDSRDiscTrainerV431(conf, tb_logger, test_dataloader, kernel=ker_gt_path, filename=tar_name, timestamp=timestamp)
         trainer.eval_logger.info(ref_list)
 
         if conf.pretrained_baseline_path:

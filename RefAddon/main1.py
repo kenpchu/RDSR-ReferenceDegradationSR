@@ -160,7 +160,7 @@ def main(conf_dict=None, is_baseline=False, baseline=0):
     if conf_dict is not None and description_str in conf_dict.keys():
         os.rename(conf.output_dir_ori, conf.output_dir_ori + "_" + conf_dict[description_str])
 
-    if is_baseline:
+    if is_baseline or conf_dict is None:
         return 'baseline', final_avg_result
     else:
         return conf_dict[description_str], final_avg_result
