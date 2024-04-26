@@ -85,7 +85,7 @@ def selection_mode(conf, tar_path_list, ref_path_list, gt_tar, gt_ker):
 
     if conf.ref_select_path:
         ref_dir_path = os.path.dirname(ref_path_list[0])
-        ref_sel_path_list = sorted(glob.glob(os.path.join(conf.datasets_dir, conf.ref_select_path, "*_ref.txt")))
+        ref_sel_path_list = sorted(glob.glob(os.path.join(conf.ref_select_path, "*_ref.txt")))
         ref_sel_path_list = sorted(ref_sel_path_list, key=lambda x: int(x.split('/')[-1].split('_')[1]))
         ref_all_list = []
         for tar_path in tar_path_list:
@@ -279,7 +279,7 @@ def main():
     set_seed(conf.random_seed)
 
     if conf.ref_select_path:
-        select_ref_list = sorted(glob.glob(os.path.join(conf.datasets_dir, conf.ref_select_path, "*")))
+        select_ref_list = sorted(glob.glob(os.path.join(conf.ref_select_path, "*")))
         select_ref_list = sorted(select_ref_list, key=lambda x: int(os.path.basename(x).split('_')[1]))
         select_ref_list = ['_'.join(os.path.basename(ref).split('_')[:2]) + '.png' for ref in select_ref_list]
         print(','.join(select_ref_list))
