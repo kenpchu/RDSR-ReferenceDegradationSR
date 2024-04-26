@@ -10,7 +10,6 @@ mkdir -p log
 # CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=6 python train_rdsr_disc_v83.py \
 #                 --cfg_path cfg/config_rdsr_x2_aniso.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
 
-# Not verify
 # RDSR x4 iso
 # CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=4 python train_rdsr_disc_v44.py \
 #                 --cfg_path cfg/config_rdsr_x4_iso.json  >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
@@ -22,3 +21,20 @@ mkdir -p log
 # RDSR gt x2 aniso
 # CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=3 python train_gt.py \
 #                 --cfg_path cfg/config_rdsr_x2_aniso_gt.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
+
+# RDSR x2 aniso train dr vector only
+# CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=6 python train_rdsr_disc_v84.py \
+#                 --cfg_path cfg/config_rdsr_x2_aniso_dr_only.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
+
+# RDSR x2 aniso add dn discriminator
+# CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=6 python train_rdsr_disc_v85.py \
+#                 --cfg_path cfg/config_rdsr_x2_aniso_dn_gan.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
+
+# not verify
+# RDSR x2 iso train dr vector only
+# CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=6 python train_rdsr_disc_v21.py \
+#                 --cfg_path cfg/config_rdsr_x2_iso_dr_only.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
+
+# RDSR x2 iso add dn discriminator
+# CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=6 python train_rdsr_disc_v22.py \
+#                 --cfg_path cfg/config_rdsr_x2_iso_dn_gan.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &

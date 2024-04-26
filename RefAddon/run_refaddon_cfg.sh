@@ -12,7 +12,6 @@ mkdir -p log
 # DualSR + Ref add-on x2 reverse
 # CUDA_VISIBLE_DEVICES=6 python main2.py --cfg_path cfg/config_addon_div2k_x2-reverse.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
 
-
 # DualSR + Ref add-on x2 random with random seed 
-CUDA_VISIBLE_DEVICES=6 python main_para_loop.py --cfg_path cfg/config_addon_div2k_x2-random.json --para_path cfg/random_x2_paras_1.json 
+# CUDA_VISIBLE_DEVICES=6 python main_para_loop.py --cfg_path cfg/config_addon_div2k_x2-random.json --para_path cfg/random_x2_paras_1.json 
 # >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
