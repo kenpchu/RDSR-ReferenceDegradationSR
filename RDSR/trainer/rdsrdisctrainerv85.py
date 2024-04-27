@@ -1,7 +1,7 @@
 import torch
 import os
 from trainer.rdsrdisctrainerv82 import RDSRDiscTrainerV8 as RDSRDiscTrainerV82
-from loss.loss import GANLoss
+from loss.loss import GANLoss, GANLoss2
 from networks.upsample import make_up_discriminator_net
 
 from utils.img_utils import shave_a2b, tensor2im, cal_y_psnr, calc_curr_k, calculate_psnr3
@@ -21,7 +21,8 @@ class RDSRDiscTrainerV85(RDSRDiscTrainerV82):
         self.optimizer_up_disc = torch.optim.Adam(self.up_disc_model.parameters(), lr=self.conf.lr_up_disc,
                                                   betas=(self.conf.beta1, 0.999))
         self.up_disc_lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer_up_disc, step_size=250, gamma=0.5)
-        self.gan_loss = GANLoss().to(self.device)
+        # self.gan_loss = GANLoss().to(self.device)
+        self.gan_loss = GANLoss2().to(self.device)
 
         self.tar_hr_rec = None
         self.loss_disc = 999999
@@ -30,7 +31,9 @@ class RDSRDiscTrainerV85(RDSRDiscTrainerV82):
         self.optimizer_dn_disc = torch.optim.Adam(self.dn_disc_model.parameters(), lr=self.conf.lr_dn_disc,
                                                   betas=(self.conf.beta1, 0.999))
         self.dn_disc_lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer_dn_disc, step_size=250, gamma=0.5)
-        self.dn_gan_loss = GANLoss().to(self.device)
+        # self.dn_gan_loss = GANLoss().to(self.device)
+        self.dn_gan_loss = GANLoss2().to(self.device)
+
         self.ref_lr_rec = None
         self.loss_dn_disc = 999999
 

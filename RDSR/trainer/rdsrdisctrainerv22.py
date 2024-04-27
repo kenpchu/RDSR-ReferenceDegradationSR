@@ -1,7 +1,7 @@
 import torch
 import os
 from trainer.rdsrtrainer import RDSRTrainer
-from loss.loss import GANLoss
+from loss.loss import GANLoss, GANLoss2
 from networks.upsample import make_up_discriminator_net
 
 from utils.img_utils import cal_y_psnr, shave_a2b, tensor2im, calculate_psnr, calc_curr_k, calculate_psnr3
@@ -25,8 +25,10 @@ class RDSRDiscTrainerV2(RDSRTrainer):
                                                   betas=(self.conf.beta1, 0.999))
         self.up_disc_lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer_up_disc, step_size=250, gamma=0.5)
         self.dn_disc_lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer_dn_disc, step_size=250, gamma=0.5)
-        self.gan_loss = GANLoss().to(self.device)
-        self.dn_gan_loss = GANLoss().to(self.device)
+        # self.gan_loss = GANLoss().to(self.device)
+        # self.dn_gan_loss = GANLoss().to(self.device)
+        self.gan_loss = GANLoss2().to(self.device)
+        self.dn_gan_loss = GANLoss2().to(self.device)
 
         self.tar_hr_rec = None
         self.ref_lr_rec = None

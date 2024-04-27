@@ -14,7 +14,10 @@ class GANLoss(nn.Module):
     def __init__(self):
         super(GANLoss, self).__init__()
         # The loss function is applied after the pixel-wise comparison to the true label (0/1)
+        # DualSR use L2
         self.loss = nn.MSELoss()
+        # kernelGAN use L1
+        self.lossl1 = nn.L1Loss(reduction='mean')
         # real and fake labels
         self.register_buffer('real_label', torch.tensor(1.0))
         self.register_buffer('fake_label', torch.tensor(0.0))
@@ -30,6 +33,35 @@ class GANLoss(nn.Module):
         target_tensor = self.get_target_tensor(d_last_layer, is_d_input_real)
         loss = self.loss(d_last_layer, target_tensor)
         return loss
+
+
+class GANLoss2(nn.Module):
+    """D outputs a [0,1] map of size of the input. This map is compared in a pixel-wise manner to 1/0 according to
+    whether the input is real (i.e. from the input image) or fake (i.e. from the Generator)"""
+
+    def __init__(self):
+        super(GANLoss2, self).__init__()
+        # The loss function is applied after the pixel-wise comparison to the true label (0/1)
+        # DualSR use L2
+        # self.loss = nn.MSELoss()
+        # kernelGAN use L1
+        self.loss = nn.L1Loss(reduction='mean')
+        # real and fake labels
+        self.register_buffer('real_label', torch.tensor(1.0))
+        self.register_buffer('fake_label', torch.tensor(0.0))
+
+    def get_target_tensor(self, prediction, target_is_real):
+        if target_is_real:
+            target_tensor = self.real_label
+        else:
+            target_tensor = self.fake_label
+        return target_tensor.expand_as(prediction)
+
+    def forward(self, d_last_layer, is_d_input_real):
+        target_tensor = self.get_target_tensor(d_last_layer, is_d_input_real)
+        loss = self.loss(d_last_layer, target_tensor)
+        return loss
+
 
 class TVLoss(nn.Module):
     def __init__(self, TVLoss_weight=1):
