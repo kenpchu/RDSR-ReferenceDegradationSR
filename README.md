@@ -1,4 +1,4 @@
-Acknowledgement
+# Acknowledgement
 The code is built on [DualSR](https://github.com/memad73/DualSR) & [DASR](https://github.com/The-Learning-And-Vision-Atelier-LAVA/DASR). We thank the authors for sharing the codes.
 
 ------------------------------------
