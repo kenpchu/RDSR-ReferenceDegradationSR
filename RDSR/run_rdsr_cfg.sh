@@ -27,8 +27,12 @@ mkdir -p log
 #                 --cfg_path cfg/config_rdsr_x2_aniso_dr_only.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
 
 # RDSR x2 aniso add dn discriminator
-# CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=0 python train_rdsr_disc_v85.py \
+# CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=1 python train_rdsr_disc_v85.py \
 #                 --cfg_path cfg/config_rdsr_x2_aniso_dn_gan.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
+
+# RDSR x2 aniso train dr vector only + dn discriminator
+# CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=6 python train_rdsr_disc_v845.py \
+#                 --cfg_path cfg/config_rdsr_x2_aniso_dr_only_dn_gan.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
 
 # not verify
 # RDSR x2 iso train dr vector only

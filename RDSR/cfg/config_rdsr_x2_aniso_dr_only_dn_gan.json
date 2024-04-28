@@ -5,7 +5,7 @@
     "patch_size": 48,
     "train_iters": 3000,
     "train_encoder_iters": 500,
-    "train_sr_iters": 0,
+    "train_sr_iters": 100,
     "train_epochs": 500,
     "batch_size": 2,
     "datasets_dir": "../../datasets",
@@ -52,7 +52,7 @@
     "lr_up_disc": 1e-04,
     "lr_dn_disc": 1e-03,
     "lr_dn": 0.001,
-    "lr_en": 5e-05,
+    "lr_en": 5e-06,
     "beta1": 0.25,
     "lrs_step_size": 800,
     "lrs_gamma": 0.25,
@@ -84,8 +84,8 @@
     "tsne_img_path": "../../datasets/DIV2KRK/gt",
     "tsne_img_count": 50,
     "tsne_ker_count": 5,
-    "target_ind": 50,
-    "target_count": 50,
+    "target_ind": 0,
+    "target_count": 30,
     "ref_selection": 1,
     "rgb_range": 1.0,
     "is_normalize": 1,
@@ -93,5 +93,5 @@
     "ref_continue_mode": 0,
     "ref_select_path": "ref_list",
     "target_select_path": "",
-    "description": "RDSR x2 aniso, dn discriminator"
+    "description": "RDSR x2 aniso, dn discriminator, dr only"
 }
