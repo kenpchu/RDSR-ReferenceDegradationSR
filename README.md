@@ -1,3 +1,5 @@
+# Visual Results
+------------------------------------
 | Mode | Scale | Datasets | Img No. |
 | :----: | :----: | :----: | :----: |
 | RDSR-iso | x2 | DIV2KRK | im_4 |
@@ -223,3 +225,7 @@
 | <img src="images/RefAddon_x4/im_80/img_80_ref-combine.jpg" width="150" height="150"> | <img src="images/RefAddon_x4/im_80/9_im_80.jpg" width="150" height="150"> |<img src="images/RefAddon_x4/im_80/9_zoom1_gt_img_80.png" width="150" height="150">|<img src="images/RefAddon_x4/im_80/9_zoom2_tar_img_80.png" width="150" height="150">|<img src="images/RefAddon_x4/im_80/9_zoom3_com_img_80.png" width="150" height="150">|<img src="images/RefAddon_x4/im_80/9_zoom5_lr_img_80.png" width="150" height="150">|
 
 ------------------------------------
+
+# Acknowledgement
+The code is built on [DualSR](https://github.com/memad73/DualSR) & [DASR](https://github.com/The-Learning-And-Vision-Atelier-LAVA/DASR). We thank the authors for sharing the codes.
+
