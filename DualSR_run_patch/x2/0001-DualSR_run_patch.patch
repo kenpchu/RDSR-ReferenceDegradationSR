@@ -1,0 +1,360 @@
+From 5d98fd8a645c619d427a4b1d71bca245a852bfc0 Mon Sep 17 00:00:00 2001
+From: whtang906 <whtang906@gmail.com>
+Date: Wed, 1 May 2024 14:25:11 +0800
+Subject: [PATCH 1/1] DualSR_run_patch
+
+---
+ DualSR.py         | 24 +++++++++++++++++++++---
+ load_model.py     | 37 ++++++++++++++++++++++++++++++++++++
+ main.py           | 14 +++++++++++---
+ main_div2k.py     | 41 ++++++++++++++++++++++++++++++++++++++++
+ main_valid2017.py | 41 ++++++++++++++++++++++++++++++++++++++++
+ options.py        | 48 +++++++++++++++++++++++++++++++++++++++++++++--
+ run.sh            | 33 ++++++++++++++++++++++++++++++++
+ 7 files changed, 230 insertions(+), 8 deletions(-)
+ create mode 100644 load_model.py
+ create mode 100644 main_div2k.py
+ create mode 100644 main_valid2017.py
+ create mode 100644 run.sh
+
+diff --git a/DualSR.py b/DualSR.py
+index 4f66ea9..a8b63a5 100644
+--- a/DualSR.py
++++ b/DualSR.py
+@@ -15,7 +15,7 @@ class DualSR:
+         # Fix random seed
+         torch.manual_seed(0)
+         torch.backends.cudnn.deterministic = True # slightly reduces throughput
+-    
++
+         # Acquire configuration
+         self.conf = conf
+         
+@@ -152,7 +152,13 @@ class DualSR:
+             
+         util.save_final_kernel(util.move2cpu(self.curr_k), self.conf)
+         plt.imsave(os.path.join(self.conf.output_dir, '%s.png' % self.conf.abs_img_name), self.upsampled_img)
+-        
++
++        # Save SR & DN model
++        dn_model_path = os.path.join(self.conf.output_dir, '%s_dn_model.pt' % self.conf.abs_img_name)
++        sr_model_path = os.path.join(self.conf.output_dir, '%s_sr_model.pt' % self.conf.abs_img_name)
++        torch.save(self.G_DN.state_dict(), dn_model_path)
++        torch.save(self.G_UP.state_dict(), sr_model_path)
++
+         if self.gt_img is not None:
+             print('Upsampler PSNR = ', self.UP_psnrs[-1])
+         if self.gt_kernel is not None:
+@@ -289,4 +295,16 @@ class DualSR:
+         self.fig.canvas.draw()
+         plt.pause(0.01)
+         
+-        
+\ No newline at end of file
++    def load_and_predict(self, sr_path, dn_path):
++        self.G_UP.load_state_dict(torch.load(sr_path), strict=False)
++        self.G_DN.load_state_dict(torch.load(dn_path), strict=False)
++        
++        with torch.no_grad():
++            downsampled_img_t = self.G_DN(self.in_img_cropped_t)
++            upsampled_img_t = self.G_UP(self.in_img_t)
++        
++        self.downsampled_img = util.tensor2im(downsampled_img_t)
++        self.upsampled_img = util.tensor2im(upsampled_img_t)
++        
++        plt.imsave(os.path.join(self.conf.output_dir, '%s_sr.png' % self.conf.abs_img_name), self.upsampled_img)
++        plt.imsave(os.path.join(self.conf.output_dir, '%s_dn.png' % self.conf.abs_img_name), self.downsampled_img)
+diff --git a/load_model.py b/load_model.py
+new file mode 100644
+index 0000000..bd99b4c
+--- /dev/null
++++ b/load_model.py
+@@ -0,0 +1,37 @@
++import os
++import tqdm
++
++from options import options
++from data import create_dataset
++from DualSR import DualSR
++from learner import Learner
++
++
++def train_and_eval(conf):
++    model = DualSR(conf)
++    dataloader = create_dataset(conf)    
++    learner = Learner(model)
++
++    print('*' * 60 + '\nTraining started ...')
++    model.load_and_predict('results_2023-07-23_15-45-21_20230723-154522/im_1_sr_model.pt', 
++                           'results_2023-07-23_15-45-21_20230723-154522/im_1_dr_model.pt')
++        
++    # model.eval()
++
++
++def main():
++    opt = options()
++    # Run DualSR on all images in the input directory
++    image_path_list = os.listdir(opt.conf.input_dir)
++    image_path_list = sorted(image_path_list, key=lambda x: int(x.split('.')[0].split('_')[1]))
++    image_path_list = image_path_list[opt.conf.start_index:opt.conf.start_index + opt.conf.train_count]
++
++    for img_name in image_path_list:
++        print(img_name)
++        conf = opt.get_config(img_name)
++        train_and_eval(conf)
++    
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/main.py b/main.py
+index 447bb5c..84906c9 100644
+--- a/main.py
++++ b/main.py
+@@ -11,9 +11,11 @@ def train_and_eval(conf):
+     model = DualSR(conf)
+     dataloader = create_dataset(conf)    
+     learner = Learner(model)
+-    
++
+     print('*' * 60 + '\nTraining started ...')
+-    for iteration, data in enumerate(tqdm.tqdm(dataloader)):
++    for iteration, data in enumerate(dataloader):
++        if iteration % 500 == 0 or iteration % (conf.num_iters//10) == 0:
++            print(iteration)
+         model.train(data)
+         learner.update(iteration, model)
+         
+@@ -23,7 +25,13 @@ def train_and_eval(conf):
+ def main():
+     opt = options()
+     # Run DualSR on all images in the input directory
+-    for img_name in os.listdir(opt.conf.input_dir):
++    image_path_list = os.listdir(opt.conf.input_dir)
++    image_path_list = sorted(image_path_list)
++    image_path_list = image_path_list[opt.conf.start_index:opt.conf.start_index + opt.conf.train_count]
++    print(image_path_list)
++
++    for img_name in image_path_list:
++        print(img_name)
+         conf = opt.get_config(img_name)
+         train_and_eval(conf)
+     
+diff --git a/main_div2k.py b/main_div2k.py
+new file mode 100644
+index 0000000..eef9e7c
+--- /dev/null
++++ b/main_div2k.py
+@@ -0,0 +1,41 @@
++import os
++import tqdm
++
++from options import options
++from data import create_dataset
++from DualSR import DualSR
++from learner import Learner
++
++
++def train_and_eval(conf):
++    model = DualSR(conf)
++    dataloader = create_dataset(conf)    
++    learner = Learner(model)
++
++    print('*' * 60 + '\nTraining started ...')
++    for iteration, data in enumerate(dataloader):
++        if iteration % 500 == 0 or iteration % (conf.num_iters//10) == 0:
++            print(iteration)
++        model.train(data)
++        learner.update(iteration, model)
++        
++    model.eval()
++
++
++def main():
++    opt = options()
++    # Run DualSR on all images in the input directory
++    image_path_list = os.listdir(opt.conf.input_dir)
++    image_path_list = sorted(image_path_list)
++    image_path_list = image_path_list[opt.conf.start_index:opt.conf.start_index + opt.conf.train_count]
++    print(image_path_list)
++
++    for img_name in image_path_list:
++        print(img_name)
++        conf = opt.get_div2k_config(img_name)
++        train_and_eval(conf)
++    
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/main_valid2017.py b/main_valid2017.py
+new file mode 100644
+index 0000000..c1eccee
+--- /dev/null
++++ b/main_valid2017.py
+@@ -0,0 +1,41 @@
++import os
++import tqdm
++
++from options import options
++from data import create_dataset
++from DualSR import DualSR
++from learner import Learner
++
++
++def train_and_eval(conf):
++    model = DualSR(conf)
++    dataloader = create_dataset(conf)    
++    learner = Learner(model)
++
++    print('*' * 60 + '\nTraining started ...')
++    for iteration, data in enumerate(dataloader):
++        if iteration % 500 == 0 or iteration % (conf.num_iters//10) == 0:
++            print(iteration)
++        model.train(data)
++        learner.update(iteration, model)
++        
++    model.eval()
++
++
++def main():
++    opt = options()
++    # Run DualSR on all images in the input directory
++    image_path_list = os.listdir(opt.conf.input_dir)
++    image_path_list = sorted(image_path_list)
++    image_path_list = image_path_list[opt.conf.start_index:opt.conf.start_index + opt.conf.train_count]
++    print(image_path_list)
++
++    for img_name in image_path_list:
++        print(img_name)
++        conf = opt.get_valid2017_config(img_name)
++        train_and_eval(conf)
++    
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/options.py b/options.py
+index 27b732e..81aa079 100644
+--- a/options.py
++++ b/options.py
+@@ -1,6 +1,7 @@
+ import argparse
+ import torch
+ import os
++from datetime import datetime
+ 
+ 
+ class options:
+@@ -39,9 +40,16 @@ class options:
+         self.parser.add_argument('--eval_iters', type=int, default=100, help='for debug purpose')
+         self.parser.add_argument('--plot_iters', type=int, default=200, help='for debug purpose')
+         self.parser.add_argument('--debug', action='store_true', help='plot intermediate results')
++
++        self.parser.add_argument('--start_index', type=int, default=0)
++        self.parser.add_argument('--train_count', type=int, default=200)
+         
+         self.conf = self.parser.parse_args()
+-        
++
++        timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
++        print(timestamp)
++        self.conf.output_dir = self.conf.output_dir + '_' + timestamp
++
+         if not os.path.exists(self.conf.output_dir):
+             os.makedirs(self.conf.output_dir)
+             
+@@ -53,13 +61,49 @@ class options:
+         self.conf.input_image_path = os.path.join(self.conf.input_dir, img_name)
+         self.conf.kernel_path = os.path.join(self.conf.kernel_dir, self.conf.abs_img_name + '.mat') if self.conf.kernel_dir != '' else None
+         self.conf.gt_path = os.path.join(self.conf.gt_dir, img_name) if self.conf.gt_dir != '' else None
+-        
++
++        # Need to modify
++        im_no = os.path.basename(self.conf.input_image_path).split('.')[0].split('_')[1]
++        self.conf.kernel_path = os.path.join(self.conf.kernel_dir, f'kernel_{im_no}.mat') if self.conf.kernel_dir != '' else None
++        self.conf.gt_path = os.path.join(self.conf.gt_dir, f'img_{im_no}_gt.png') if self.conf.gt_dir != '' else None
++
+         print('*' * 60 + '\nRunning DualSR ...')
+         print('input image: \'%s\'' %self.conf.input_image_path)
+         print('grand-truth image: \'%s\'' %self.conf.gt_path)
+         print('grand-truth kernel: \'%s\'' %self.conf.kernel_path)
+         return self.conf
+     
++    def get_div2k_config(self, img_name):
++        self.conf.abs_img_name = os.path.splitext(img_name)[0]
++        self.conf.input_image_path = os.path.join(self.conf.input_dir, img_name)
++        self.conf.kernel_path = os.path.join(self.conf.kernel_dir, self.conf.abs_img_name + '.mat') if self.conf.kernel_dir != '' else None
++        self.conf.gt_path = os.path.join(self.conf.gt_dir, img_name) if self.conf.gt_dir != '' else None
++
++        # Need to modify
++        im_no = os.path.basename(self.conf.input_image_path)[:4]
++        self.conf.kernel_path = os.path.join(self.conf.kernel_dir, f'kernel_{im_no}.mat') if self.conf.kernel_dir != '' else None
++        self.conf.gt_path = os.path.join(self.conf.gt_dir, f'{im_no}.png') if self.conf.gt_dir != '' else None
++
++        print('*' * 60 + '\nRunning DualSR ...')
++        print('input image: \'%s\'' %self.conf.input_image_path)
++        print('grand-truth image: \'%s\'' %self.conf.gt_path)
++        print('grand-truth kernel: \'%s\'' %self.conf.kernel_path)
++        return self.conf
+ 
++    def get_valid2017_config(self, img_name):
++        self.conf.abs_img_name = os.path.splitext(img_name)[0]
++        self.conf.input_image_path = os.path.join(self.conf.input_dir, img_name)
++        self.conf.kernel_path = os.path.join(self.conf.kernel_dir, self.conf.abs_img_name + '.mat') if self.conf.kernel_dir != '' else None
++        self.conf.gt_path = os.path.join(self.conf.gt_dir, img_name) if self.conf.gt_dir != '' else None
++
++        # Need to modify
++        im_no = int(os.path.basename(self.conf.input_image_path)[:4]) - 800
++        self.conf.kernel_path = None
++        self.conf.gt_path = os.path.join(self.conf.gt_dir, f'img_{im_no}_gt.png') if self.conf.gt_dir != '' else None
+ 
++        print('*' * 60 + '\nRunning DualSR ...')
++        print('input image: \'%s\'' %self.conf.input_image_path)
++        print('ground-truth image: \'%s\'' %self.conf.gt_path)
++        print('ground-truth kernel: \'%s\'' %self.conf.kernel_path)
++        return self.conf
+ 
+diff --git a/run.sh b/run.sh
+new file mode 100644
+index 0000000..0ea584c
+--- /dev/null
++++ b/run.sh
+@@ -0,0 +1,33 @@
++TIMESTAMP=`date "+%Y-%m-%d_%H-%M-%S"`
++echo $TIMESTAMP
++mkdir -p log
++
++# Run DIV2K dataset
++# CUDA_VISIBLE_DEVICES=0 python main_div2k.py --input_dir ../datasets/DIV2K/DIV2K_train_LR_unknown/X2 \
++#                                             --gt_dir ../datasets/DIV2K/DIV2K_train_HR \
++#                                             --start_index 0 --train_count 400 \
++#                                             --output_dir results >> ./log/DualSR_$TIMESTAMP.log 2>&1 &
++
++# CUDA_VISIBLE_DEVICES=1 python main_div2k.py --input_dir ../datasets/DIV2K/DIV2K_train_LR_unknown/X2 \
++#                                             --gt_dir ../datasets/DIV2K/DIV2K_train_HR \
++#                                             --start_index 400 --train_count 400 \
++#                                             --output_dir results >> ./log/DualSR_$TIMESTAMP.log 2>&1 &
++
++# Run DIV2KRK dataset
++# CUDA_VISIBLE_DEVICES=0 python main.py --input_dir ../datasets/DIV2KRK/lr_x2 \
++#                                       --kernel_dir ../datasets/DIV2KRK/gt_k_x2 \
++#                                       --gt_dir ../datasets/DIV2KRK/gt \
++#                                       --start_index 0 --train_count 50 \
++#                                       --output_dir results >> ./log/DualSR_$TIMESTAMP.log 2>&1 &
++
++# CUDA_VISIBLE_DEVICES=1 python main.py --input_dir ../datasets/DIV2KRK/lr_x2 \
++#                                       --kernel_dir ../datasets/DIV2KRK/gt_k_x2 \
++#                                       --gt_dir ../datasets/DIV2KRK/gt \
++#                                       --start_index 50 --train_count 50 \
++#                                       --output_dir results >> ./log/DualSR_$TIMESTAMP.log 2>&1 &
++
++# Run validation 2017 datasets
++CUDA_VISIBLE_DEVICES=2 python main_valid2017.py --input_dir ../datasets/DIV2K_valid_LR_unknown/X2 \
++                                            --gt_dir ../datasets/DIV2KRK/gt \
++                                            --start_index 0 --train_count 100 \
++                                            --output_dir results >> ./log/DualSR_$TIMESTAMP.log 2>&1 &
+\ No newline at end of file
+-- 
+2.17.1
+
