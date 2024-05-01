@@ -105,7 +105,7 @@ def combine(paths):
 
 def main1():
     # eval_csv path
-    input_files = glob.glob('../RDSR/train_loggers/aniso_dr_only_x2/eval_*.csv')
+    input_files = glob.glob('/mnt/HDD1/phudh/super_resolution/RDSR-ReferenceDegradationSR/RDSR/train_loggers/20240429-153225/eval_*.csv')
 
     eval_combine_path = combine(input_files)
     # time.sleep(1)
