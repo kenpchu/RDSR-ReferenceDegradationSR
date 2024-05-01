@@ -17,6 +17,7 @@ psnr_utils/service_account.json
 dasr_model/*
 RDSR/tb_loggers/*
 RDSR/train_loggers/*
+RDSR/tsne_loggers/*
 RefAddon/train_log/*
 pretrain/*
 dn_result_*.csv

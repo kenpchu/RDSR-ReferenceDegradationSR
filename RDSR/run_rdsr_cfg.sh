@@ -23,7 +23,7 @@ mkdir -p log
 #                 --cfg_path cfg/config_rdsr_x2_aniso_gt.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
 
 # RDSR x2 aniso train dr vector only
-# CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=6 python train_rdsr_disc_v84.py \
+# CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=0 python train_rdsr_disc_v84.py \
 #                 --cfg_path cfg/config_rdsr_x2_aniso_dr_only.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
 
 # RDSR x2 aniso add dn discriminator
@@ -46,3 +46,6 @@ mkdir -p log
 # RDSR x2 iso add dn discriminator DOE
 # CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=6 python train_rdsr_disc_v22.py \
 #                 --cfg_path cfg/config_rdsr_x2_iso_dn_gan_doe1.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
+
+# run TSNE
+# CUDA_VISIBLE_DEVICES=1 python tsne_utils.py --cfg_path cfg/config_tsne.json

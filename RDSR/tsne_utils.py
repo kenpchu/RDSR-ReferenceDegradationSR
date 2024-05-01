@@ -1,8 +1,10 @@
 from glob import glob
 from datetime import datetime
 
-from train_options import Options
-from model.blindsr import make_model as make_sr_model
+from options import Options, JsonOptions
+# from train_options import Options
+
+from networks.blindsr import make_model as make_sr_model
 from utils.util import SRMDPreprocessing, BatchBlur
 from matplotlib.legend_handler import HandlerTuple, HandlerPathCollection
 from scipy.io import loadmat
@@ -80,7 +82,7 @@ def visualization_tsne(embedded, save_path, tnse_name='tnse', labels=[]):
 
     # for text in legend.get_texts():
     #     text.set_alpha(alpha)
-
+    print(os.path.join(save_path, f'tnse_{tnse_name}.png'))
     plt.savefig(os.path.join(save_path, f'tnse_{tnse_name}.png'))
 
     plt.close('all')
@@ -178,9 +180,9 @@ def evaluate_DR_test(config, encoder, output_path, tnse_name='tnse_test'):
     hr_img_list = hr_img_list[:config.tsne_img_count]
     print(len(hr_img_list))
     # ker_list = [os.path.join(config.kernel_gt_dir , "kernel_" + os.path.basename(hr_path).split('_')[1] + ".mat") for hr_path in hr_img_list]
-    ker_list = sorted(glob(os.path.join(config.kernel_gt_dir, "*.mat")), key=lambda x: int(x.split('_')[-1].split('.')[0]))
+    ker_list = sorted(glob(os.path.join(config.datasets_dir, config.kernel_gt_dir, "*.mat")), key=lambda x: int(x.split('_')[-1].split('.')[0]))
+    # print(config.kernel_gt_dir)
     # print(ker_list)
-
     ker_type_cnt = config.tsne_ker_count
     ker_list = ker_list[:ker_type_cnt]
     print(len(ker_list))
@@ -336,14 +338,15 @@ def evaluate_DR_test2(config, encoder, output_path, tnse_name=1, ker_st=0):
 
 
 if __name__ == '__main__':
-    opt = Options()
+    # opt = Options()
+    opt = JsonOptions()
     conf = opt.get_config()
     tmp_scale = conf.scale
     conf.scale = [conf.scale]
     sr_model = make_sr_model(conf).cuda()
     conf.scale = tmp_scale
-    if conf.pretrained_dasr_path:
-        sr_model.load_state_dict(torch.load(conf.pretrained_dasr_path), strict=False)
+    if conf.pretrained_baseline_path:
+        sr_model.load_state_dict(torch.load(conf.pretrained_baseline_path), strict=False)
     sr_model.eval()
 
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -352,8 +355,8 @@ if __name__ == '__main__':
         os.makedirs(save_path)
 
     # evaluate_DR(conf, sr_model.E, save_path)
-    evaluate_DR_test(conf, sr_model.E, save_path)
-    # evaluate_DR_test1(conf, sr_model.E, '')
+    # evaluate_DR_test(conf, sr_model.E, save_path)
+    evaluate_DR_test1(conf, sr_model.E, save_path)
 
     # timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     # save_path = os.path.join(conf.output_dir, timestamp)
