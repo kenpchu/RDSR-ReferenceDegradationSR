@@ -35,6 +35,11 @@ class RDSRTrainer(RDSRBaseTrainer):
         self.ref_lr_rec_w = None
         self.ref_hr_rec_w = None
 
+        # Phu
+        self.list_targetLR_dr = []
+        self.list_refLR_dr = []
+        self.list_refLR_dr_afterUpdate = []
+
         # self.best_target_loss = 999999
         self.base_target_loss = 999999
 
@@ -76,6 +81,83 @@ class RDSRTrainer(RDSRBaseTrainer):
     def save_input_img(self):
         self.save_img(self.ref_hr, 'ref_hr')
         self.save_img(self.tar_lr, 'tar_lr')
+
+    def start_train_dn_with_Lreg(self, target_hr_base):
+        self.iter_step()
+
+        # use pretrain model as GT for training
+        # TODO: use eval() mode? use baseline model
+        # with torch.no_grad():
+        #     tar_lr_dr = self.en_model(self.tar_lr, self.tar_lr)
+        #     tar_hr_rec = self.sr_model(self.tar_lr, tar_lr_dr)
+
+        self.dn_model.train()
+        self.optimizer_Dn.zero_grad()
+        # tar_rec_lr = self.dn_model(tar_hr_rec)
+        tar_rec_lr = self.dn_model(target_hr_base)
+
+        # calculate L1 loss
+        total_loss = 0
+        # dn_l1_loss = self.lr_l1_loss(tar_rec_lr, shave_a2b(self.tar_lr, tar_rec_lr))
+        dn_l1_loss = self.l1_loss(tar_rec_lr, shave_a2b(self.tar_lr, tar_rec_lr))
+        total_loss += dn_l1_loss
+
+        # calculate down sample regularization loss
+        self.curr_k = calc_curr_k(self.dn_model.parameters())
+        dn_regularization_loss = self.dn_regularization(self.curr_k, target_hr_base, tar_rec_lr)
+        total_loss += dn_regularization_loss * self.conf.dn_regular_lambda
+
+        # Calculate Lreg loss - encoder of UpNet
+        ref_rec_lr = self.dn_model(self.ref_hr)
+        ref_rec_dr, _ = self.en_model(ref_rec_lr, ref_rec_lr)
+        tar_lr_dr, _= self.en_model(self.tar_lr, self.tar_lr)
+        loss_dr = self.l1_loss(ref_rec_dr, tar_lr_dr)
+        total_loss += loss_dr * self.conf.dr_lambda
+
+        self.list_targetLR_dr.append(tar_lr_dr.detach().cpu().numpy())
+        self.list_refLR_dr.append(ref_rec_dr.detach().cpu().numpy())
+
+        loss_tar_vgg = 0
+        if self.conf.vgg_tar_lambda != 0:
+            loss_tar_vgg = self.vgg_loss.forward(shave_a2b(self.tar_lr, tar_rec_lr), tar_rec_lr)
+            total_loss += loss_tar_vgg * self.conf.vgg_tar_lambda
+
+        
+
+        if self.iter % self.conf.scale_iters == 0:
+            self.loss_logger.info(f'{self.iter}_phu, total_loss: {format(total_loss, ".5f")}, loss_dr: {format(loss_dr, ".5f")}, , ,')
+            self.loss_list.append(total_loss.item())
+        total_loss.backward()
+        # print(total_loss)
+
+        self.optimizer_Dn.step()
+
+        # Update learning rate
+        # self.update_dn_lrs()
+        self.update_matrix_dn_lrs(total_loss)
+
+        if self.iter % self.conf.plot_iters == 0:
+            tar_img = Image.fromarray(tensor2im(self.tar_lr))
+            tar_hr_img = Image.fromarray(tensor2im(target_hr_base))
+            tar_rec_lr_img = Image.fromarray(tensor2im(tar_rec_lr))
+            ref_lr_img = Image.fromarray(tensor2im(ref_rec_lr))
+
+            tar_img.save(os.path.join(self.save_path, 'tar_img_phu.png'))
+            tar_hr_img.save(os.path.join(self.save_path, 'tar_hr_img_phu.png'))
+            tar_rec_lr_img.save(os.path.join(self.save_path, 'tar_lr_rec_phu.png'))
+            ref_lr_img.save(os.path.join(self.save_path, 'ref_lr_img_phu.png'))
+
+            # self.dn_model_evaluation()
+            self.dn_model.eval()
+            self.dn_evaluation()
+
+        if self.iter % self.conf.evaluate_iters == 0:
+            # self.dn_evaluation()
+            self.eval_logger.info(f'{self.iter}, {format(self.tar_hr_psnr, ".5f")}, {format(self.tar_lr_psnr, ".5f")}, '
+                                  f'{format(self.tar_gt_lr_psnr, ".5f")}, {format(self.gt_kernel_psnr, ".5f")}')
+
+            self.cal_whole_image_loss(is_dn=True)
+            self.show_learning_rate(is_dn=True)
 
     def start_train_dn(self, target_hr_base):
         self.iter_step()
