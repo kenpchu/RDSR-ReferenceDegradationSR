@@ -13,6 +13,7 @@ Rebuild environment command: conda env create -f RDSR.yml
   - anisotropic kernel x2: python train_rdsr_disc_v83.py --cfg/config_rdsr_x2_aniso.json 
   - isotropic kernel x4: python train_rdsr_disc_v44.py --cfg/config_rdsr_x4_iso.json 
   - anisotropic kernel x4: python train_rdsr_disc_v43.py --cfg/config_rdsr_x4_aniso.json
+- For TSNE tools: python tsne_utils.py --cfg_path cfg/config_tsne.json
 - Important Options of RDSR: (example: config_rdsr_x2_iso.json)
   - input image path:  "datasets_dir": "../../datasets" & "target_dir": "DIV2KRK/lr_x2"
   - input image ground truth path:  "datasets_dir": "../../datasets" & "ref_dir": "DIV2K/DIV2K_train_HR"
@@ -28,7 +29,7 @@ Rebuild environment command: conda env create -f RDSR.yml
   - Pretrained model path: "pretrained_baseline_path": "pre-trained_model/model_x2_iso_600.pt"
   - Select range from datasets :  "target_ind": 0 & "target_count": 100 (run from images from 1 to 100)
 
-# Run RDSR
+# Code of RDSR
 RDSR: use isotropic kernel x2 as an example, py with green color, function with blue color.
 - **RDSR/trainer/rdsrdisctrainerv20.py**: 
   - _start_train_dn_: train downsampling network (Initial Phase)
