@@ -205,7 +205,7 @@ def main():
         print(','.join(select_ref_list))
     # create timestamp and logger
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-    create_train_logger(timestamp, conf.train_log)
+    create_train_logger(timestamp, conf.train_log, conf.exp_name)
     tb_logger = create_TBlogger(conf)
 
     # dump training configuration to files

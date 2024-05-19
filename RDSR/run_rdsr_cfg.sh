@@ -7,13 +7,13 @@ mkdir -p log
 #                 --cfg_path cfg/config_rdsr_x2_iso.json >> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
 
 # RDSR x2 aniso 
-# CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=0 python train_rdsr_disc_v83.py \
+# CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=1 python train_rdsr_disc_v83.py \
 #                 --cfg_path cfg/config_rdsr_x2_aniso.json 
                 #>> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
 
 
 # RDSR x2 aniso - Phu
-CUBLAS_WORKSPACE_CONFIG=:16:8 CUDA_VISIBLE_DEVICES=0 python train_rdsr_disc_v83_phu.py \
+CUDA_VISIBLE_DEVICES=1 python train_rdsr_disc_v83_phu.py \
                 --cfg_path cfg/config_rdsr_x2_aniso_phu.json 
                 #>> ./log/Dadn_train_$TIMESTAMP.log 2>&1 &
 

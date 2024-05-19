@@ -29,6 +29,11 @@ class RDSRDiscTrainerV2(RDSRTrainer):
     def start_train_up(self, target_dr, target_hr_base, sr=False, en=True, matrix=False):
         self.train_upsample(target_dr, target_hr_base, sr=sr, en=en, matrix=matrix)
         self.train_up_discriminator()
+    
+    def start_train_up_addLRloss(self, target_dr, target_hr_base, sr=False, en=True, matrix=False):
+        self.train_upsample_addLRloss(target_dr, target_hr_base, sr=sr, en=en, matrix=matrix)
+        self.train_up_discriminator()
+
 
     def train_up_discriminator(self):
         set_requires_grad(self.up_disc_model, True)
@@ -45,11 +50,11 @@ class RDSRDiscTrainerV2(RDSRTrainer):
         self.optimizer_up_disc.step()
         self.up_disc_lr_scheduler.step()
 
-    def train_upsample(self, target_dr, target_hr_base, sr=False, en=True, matrix=False):
+    def train_upsample_addLRloss(self, target_dr, target_hr_base, sr=False, en=True, matrix=False):
         set_requires_grad(self.up_disc_model, False)
         self.iter_step()
         self.sr_iter_step()
-        self.dn_model.train()
+        self.dn_model.eval()
         self.en_model.train()
         self.sr_model.train()
         if not self.conf.dn_freeze:
@@ -75,6 +80,108 @@ class RDSRDiscTrainerV2(RDSRTrainer):
         total_loss += loss_dr * self.conf.dr_lambda
         loss_tar_sr = self.l1_loss(self.tar_hr_rec, target_hr_base)
 
+        ref_rec_lr_img = Image.fromarray(tensor2im(ref_rec_lr))
+        ref_rec_lr_baseimg = Image.fromarray(tensor2im(target_hr_base))
+
+        ref_rec_lr_img.save(os.path.join(self.save_path, 'ref_rec_lr_img.png'))
+        ref_rec_lr_baseimg.save(os.path.join(self.save_path, 'ref_rec_lr_baseimg.png'))
+        
+        # add loss Yhr-pred->lr
+        ref_rec_hr_lr = self.dn_model(ref_rec_hr)
+        loss_Ylr_lr = self.l1_loss( ref_rec_hr_lr, shave_a2b(ref_rec_lr, ref_rec_hr_lr))* self.conf.ref_lambda
+        # total_loss += loss_Ylr_lr
+        # TODO: implement dn model by using gt kernel
+        loss_tar_lr = self.l1_loss(tar_lr_rec, shave_a2b(self.tar_lr, tar_lr_rec))
+
+        loss_gan = 0
+        if self.conf.gan_lambda != 0:
+            loss_gan = self.gan_loss.forward(self.up_disc_model(self.tar_hr_rec), True)
+            total_loss += loss_gan * self.conf.gan_lambda
+
+        loss_tar_vgg = 0
+        if self.conf.vgg_tar_lambda != 0:
+            loss_tar_vgg = self.vgg_loss.forward(shave_a2b(self.tar_lr, tar_lr_rec), tar_lr_rec)
+            total_loss += loss_tar_vgg * self.conf.vgg_tar_lambda
+
+        loss_ref_vgg = 0
+        if self.conf.vgg_ref_lambda != 0:
+            loss_ref_vgg = self.vgg_loss.forward(shave_a2b(self.ref_hr, ref_rec_hr), ref_rec_hr)
+            total_loss += loss_ref_vgg * self.conf.vgg_ref_lambda
+
+        # The purpose is for bounding baseline result
+        # if self.sr_iter < self.conf.target_thres:
+        #     total_loss += loss_tar_sr * self.conf.target_lambda
+        #     total_loss += loss_tar_lr
+
+        # loss_interpo = 0
+        # if self.conf.interpo_lambda != 0:
+        #     loss_interpo = self.interpo_loss.forward(self.tar_lr, self.tar_hr_rec)
+        #     total_loss += loss_interpo * self.conf.interpo_lambda
+
+        # loss_tv = 0
+        # if self.conf.tv_lambda != 0:
+        #     loss_tv = self.tv_loss.forward(self.tar_hr_rec)
+        #     total_loss += loss_tv * self.conf.tv_lambda
+
+        # loss_color = 0
+        # if self.conf.color_lambda != 0:
+        #     loss_color = self.color_loss.forward(self.tar_lr, self.tar_hr_rec)
+        #     total_loss += loss_color * self.conf.color_lambda
+
+        # Add high frequency loss
+        # loss_hf = 0
+        # if self.conf.hf_lambda != 0:
+        #     loss_hf = self.hf_loss.forward(shave_a2b(self.ref_hr, ref_rec_hr), ref_rec_hr)
+        #     # loss_hf2 = self.hf_loss2.forward(shave_a2b(self.ref_hr, ref_rec_hr), ref_rec_hr)
+        #     total_loss += loss_hf * self.conf.hf_lambda
+
+        # loss_ref_gv = 0
+        # if self.conf.gv_ref_lambda != 0:
+        #     loss_ref_gv = self.GV_loss.forward(shave_a2b(self.ref_hr, ref_rec_hr), ref_rec_hr)
+        #     total_loss += loss_ref_gv * self.conf.gv_ref_lambda
+
+        if self.iter % self.conf.scale_iters == 0:
+            self.loss_logger.info(f'SR Total Loss: {self.iter}, total_loss: {total_loss}, ref_loss :{format(loss_ref, ".5f")} loss_2lr: {format(loss_dr, ".5f")}, lossTargetHR_bas: {format(loss_tar_sr, ".5f")}, lossYlr2lr: {format(loss_Ylr_lr, ".5f")}, loss_gan: {format(loss_gan, ".5f")} ,loss_tar_vgg: {format(loss_tar_vgg, ".5f")}, loss_ref_vgg: {format(loss_ref_vgg, ".5f")}')
+
+
+        total_loss.backward()
+        self.update_learner(sr=sr, en=en, matrix=matrix)
+
+        self.plot_eval(ref_rec_lr, ref_rec_hr, ref_rec_dr, self.tar_hr_rec, tar_lr_rec)
+        if self.iter % self.conf.evaluate_iters == 0:
+            self.cal_whole_image_loss(is_dn=False)
+            self.show_learning_rate()
+
+    def train_upsample(self, target_dr, target_hr_base, sr=False, en=True, matrix=False):
+        set_requires_grad(self.up_disc_model, False)
+        self.iter_step()
+        self.sr_iter_step()
+        # self.dn_model.train()
+        self.en_model.train()
+        # self.sr_model.train()
+        if not self.conf.dn_freeze:
+            self.optimizer_Dn.zero_grad()
+        if en:
+            self.optimizer_En.zero_grad()
+        if sr:
+            self.optimizer_Up.zero_grad()
+
+        # TODO:compare results between train() and eval()
+        ref_rec_lr = self.dn_model(self.ref_hr)
+        ref_rec_dr, _, _ = self.en_model(ref_rec_lr, ref_rec_lr)
+        ref_rec_hr = self.sr_model(ref_rec_lr, ref_rec_dr)
+
+        tar_lr_dr, _, _ = self.en_model(self.tar_lr, self.tar_lr)
+        self.tar_hr_rec = self.sr_model(self.tar_lr, tar_lr_dr)
+        tar_lr_rec = self.dn_model(target_hr_base)
+
+        loss_dr = self.l1_loss(ref_rec_dr, target_dr)
+        loss_ref = self.l1_loss(ref_rec_hr, shave_a2b(self.ref_hr, ref_rec_hr))
+
+        total_loss = loss_ref * self.conf.ref_lambda
+        total_loss += loss_dr * self.conf.dr_lambda
+        loss_tar_sr = self.l1_loss(self.tar_hr_rec, target_hr_base)
+        
         # TODO: implement dn model by using gt kernel
         loss_tar_lr = self.l1_loss(tar_lr_rec, shave_a2b(self.tar_lr, tar_lr_rec))
 
@@ -266,12 +373,13 @@ class RDSRDiscTrainerV2(RDSRTrainer):
         else:
             self.lr_logger.info(f'{self.iter},{curr_dn_lr}')
 
-    def save_model(self, best=False, dn_model=True, name=''):
+    def save_model(self, best=False, dn_model=True, name = ''):
         if self.timestamp:
-            output_path = os.path.join(self.conf.train_log, self.timestamp, self.filename)
-            if not os.path.exists(output_path):
-                os.makedirs(output_path)
-            self.save_path = output_path
+            self.save_path = f'{self.conf.train_log}/{self.conf.exp_name}{self.timestamp}'
+            # output_path = os.path.join(self.conf.train_log, self.timestamp, self.filename)
+            # if not os.path.exists(output_path):
+            #     os.makedirs(output_path)
+            # self.save_path = output_path
         if not best:
             dn_model_path = os.path.join(self.save_path, f'model_dn_{self.filename}_{self.iter}.pt')
             sr_model_path = os.path.join(self.save_path, f'model_sr_{self.filename}_{self.iter}.pt')

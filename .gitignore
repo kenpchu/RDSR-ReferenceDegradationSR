@@ -23,4 +23,10 @@ dn_result_*.csv
 pretrained_lr/*
 target_img_*.txt
 target_cfg/*.txt
-train_loggers_phu/*
+train_loggers_phu
+train_loggers
+dn_result_
+RDSR/dr_result
+RDSR/train_loggers_phu
+RDSR/train_loggers
+*.pt

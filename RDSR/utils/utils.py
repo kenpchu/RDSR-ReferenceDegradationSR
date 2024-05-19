@@ -25,11 +25,12 @@ def create_TBlogger(conf):
     return writer
 
 
-def create_train_logger(timestamp, train_log_name):
-    if not os.path.exists(f'{train_log_name}/{timestamp}'):
-        os.makedirs(f'{train_log_name}/{timestamp}')
+def create_train_logger(timestamp, train_log_name,name='' ):
+    if not os.path.exists(f'{train_log_name}/{name}{timestamp}'):
+        save_path = f'{train_log_name}/{name}{timestamp}'
+        os.makedirs(save_path)
     main_logger = logging.getLogger(f"{timestamp}")
-    f_handler = logging.FileHandler(f"{train_log_name}/{timestamp}/main_{timestamp}.log")
+    f_handler = logging.FileHandler(f"{save_path}/main_{timestamp}.log")
     f_handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     f_handler.setFormatter(formatter)
@@ -40,19 +41,19 @@ def create_train_logger(timestamp, train_log_name):
     main_logger.addHandler(stream_handler)
 
     eval_logger = logging.getLogger(f"eval")
-    eval_f_handler = logging.FileHandler(f"{train_log_name}/{timestamp}/eval_{timestamp}.csv")
+    eval_f_handler = logging.FileHandler(f"{save_path}/eval_{timestamp}.csv")
     eval_f_handler.setLevel(logging.DEBUG)
     eval_logger.setLevel(logging.DEBUG)
     eval_logger.addHandler(eval_f_handler)
 
     loss_logger = logging.getLogger(f"loss")
-    loss_f_handler = logging.FileHandler(f"{train_log_name}/{timestamp}/loss_{timestamp}.csv")
+    loss_f_handler = logging.FileHandler(f"{save_path}/loss_{timestamp}.csv")
     loss_f_handler.setLevel(logging.DEBUG)
     loss_logger.setLevel(logging.DEBUG)
     loss_logger.addHandler(loss_f_handler)
 
     lr_logger = logging.getLogger(f"lr")
-    lr_f_handler = logging.FileHandler(f"{train_log_name}/{timestamp}/lr_{timestamp}.csv")
+    lr_f_handler = logging.FileHandler(f"{save_path}/lr_{timestamp}.csv")
     lr_f_handler.setLevel(logging.DEBUG)
     lr_logger.setLevel(logging.DEBUG)
     lr_logger.addHandler(lr_f_handler)
@@ -61,13 +62,15 @@ def create_train_logger(timestamp, train_log_name):
     loss_logger.info(f'iteration, target_sr_loss, target_sr_vgg_loss, tar_hf_loss, ref_loss, ref_vgg_loss, loss_tar_lr,'
                      f' loss_tar_lr_vgg, loss_interpo, loss_tv, loss_ref_hf, total_loss, loss_ref_gv, total_loss, {timestamp}')
     eval_logger.info(f'iteration, target_hr_psnr, tar_rec_lr_psnr, ref_rec_hr_psnr, ref_lr_psnr, {timestamp}')
+    return save_path
 
 
 def create_train_logger2(timestamp, train_log_name):
     if not os.path.exists(f'{train_log_name}/{timestamp}'):
-        os.makedirs(f'{train_log_name}/{timestamp}')
+        save_root = f'{train_log_name}/{timestamp}'
+        os.makedirs(save_root)
     main_logger = logging.getLogger(f"{timestamp}")
-    f_handler = logging.FileHandler(f"{train_log_name}/{timestamp}/main_{timestamp}.log")
+    f_handler = logging.FileHandler(f"{save_root}/main_{timestamp}.log")
     f_handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     f_handler.setFormatter(formatter)
@@ -78,19 +81,19 @@ def create_train_logger2(timestamp, train_log_name):
     main_logger.addHandler(stream_handler)
 
     eval_logger = logging.getLogger(f"eval")
-    eval_f_handler = logging.FileHandler(f"{train_log_name}/{timestamp}/eval_{timestamp}.csv")
+    eval_f_handler = logging.FileHandler(f"{save_root}/eval_{timestamp}.csv")
     eval_f_handler.setLevel(logging.DEBUG)
     eval_logger.setLevel(logging.DEBUG)
     eval_logger.addHandler(eval_f_handler)
 
     loss_logger = logging.getLogger(f"loss")
-    loss_f_handler = logging.FileHandler(f"{train_log_name}/{timestamp}/loss_{timestamp}.csv")
+    loss_f_handler = logging.FileHandler(f"{save_root}/loss_{timestamp}.csv")
     loss_f_handler.setLevel(logging.DEBUG)
     loss_logger.setLevel(logging.DEBUG)
     loss_logger.addHandler(loss_f_handler)
 
     lr_logger = logging.getLogger(f"lr")
-    lr_f_handler = logging.FileHandler(f"{train_log_name}/{timestamp}/lr_{timestamp}.csv")
+    lr_f_handler = logging.FileHandler(f"{save_root}/lr_{timestamp}.csv")
     lr_f_handler.setLevel(logging.DEBUG)
     lr_logger.setLevel(logging.DEBUG)
     lr_logger.addHandler(lr_f_handler)
@@ -103,7 +106,7 @@ def create_train_logger2(timestamp, train_log_name):
 
 def dump_training_settings(conf, timestamp):
     # dump config to dictionary
-    train_folder = os.path.join(conf.train_log, timestamp)
+    train_folder = os.path.join(conf.train_log, f'{conf.exp_name}{timestamp}')
     conf_dict = dict()
     for arg in vars(conf):
         conf_dict[arg] = getattr(conf, arg)

@@ -54,6 +54,7 @@ class RDSRBaseTrainer(object):
         # evaluate values initialization
         self.eval_list = []
         self.loss_list = []
+        self.dr_loss_max = 100
         self.lr_list = []
 
         self.sr_psnr_list = []
@@ -111,6 +112,8 @@ class RDSRBaseTrainer(object):
         self.l1_loss = loss.CharbonnierLoss().cuda()
         self.lr_l1_loss = loss.CharbonnierLoss().cuda()
         self.GV_loss = loss.GradientVariance(self.conf.patch_size).cuda()
+        self.cosine = nn.CosineEmbeddingLoss()
+        self.mse = nn.MSELoss()
 
         # network initialization
         # [Customization]
@@ -152,7 +155,7 @@ class RDSRBaseTrainer(object):
         # [Customization] Need to implement preprocess kernel
         raise NotImplementedError
 
-    def init_optimizer(self, is_dn=True, is_en=True, is_up=True):
+    def init_optimizer(self, is_dn=True, is_en=True, is_up=True, is_dn_2=False):
         # [Customization] optimizer initialization
         assert self.dn_model is not None
         assert self.sr_model is not None
@@ -160,6 +163,8 @@ class RDSRBaseTrainer(object):
         if self.conf.optim == 'adam':
             if hasattr(self.dn_model, 'parameters') and is_dn:
                 self.optimizer_Dn = torch.optim.Adam(self.dn_model.parameters(), lr=self.conf.lr_dn, betas=(self.conf.beta1, 0.999))
+            if hasattr(self.dn_model, 'parameters') and is_dn_2:
+                self.optimizer_Dn = torch.optim.Adam(self.dn_model.parameters(), lr=self.conf.lr_dn_2, betas=(self.conf.beta1, 0.999))
             if self.sr_model is not None and is_up:
                 self.optimizer_Up = torch.optim.Adam(self.sr_model.parameters(), lr=self.conf.lr_up, betas=(self.conf.beta1, 0.999))
             if self.en_model is not None and is_en:
@@ -167,6 +172,8 @@ class RDSRBaseTrainer(object):
         elif self.conf.optim == 'SGD':
             if hasattr(self.dn_model, 'parameters') and is_dn:
                 self.optimizer_Dn = torch.optim.SGD(self.dn_model.parameters(), lr=self.conf.lr_dn, momentum=0.9)
+            if hasattr(self.dn_model, 'parameters') and is_dn_2:
+                self.optimizer_Dn = torch.optim.SGD(self.dn_model.parameters(), lr=self.conf.lr_dn_2, momentum=0.9)
             if self.sr_model is not None and is_up:
                 self.optimizer_Up = torch.optim.SGD(self.sr_model.parameters(), lr=self.conf.lr_up, momentum=0.9)
             if self.en_model is not None and is_en:

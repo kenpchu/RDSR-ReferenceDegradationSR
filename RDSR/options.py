@@ -33,7 +33,7 @@ class Options:
         # training settings
         self.parser.add_argument('--random_seed', type=int, default=0)
         self.parser.add_argument('--tb_name', type=str, default='TIME', help='Tensorboard logger directory')
-
+        self.parser.add_argument('--exp_name', type=str, default='')
         # Size
         # self.parser.add_argument('--scale_f', type=int, default=2)
         self.parser.add_argument('--input_crop_size', type=int, default=128)

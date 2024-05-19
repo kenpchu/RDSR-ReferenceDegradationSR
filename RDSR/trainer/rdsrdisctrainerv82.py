@@ -22,6 +22,7 @@ class RDSRDiscTrainerV8(RDSRDiscTrainerV3):
         self.brisque_metric = BRISQUE()
         self.brisque_min = 999999
         self.brisque_baseline = None
+        
 
     def train_upsample(self, target_dr, target_hr_base, sr=False, en=True, matrix=False):
         set_requires_grad(self.up_disc_model, False)
@@ -223,7 +224,7 @@ class RDSRDiscTrainerV8(RDSRDiscTrainerV3):
                     self.save_model(best=True, dn_model=False)
                     self.min_loss_sr_psnr = self.tar_hr_psnr
                     self.min_loss_sr_iter = self.iter
-                    tar_hr_rec_w_img.save(os.path.join(self.save_path, 'tar_hr_rec_min_loss_w.png'))
+                    tar_hr_rec_w_img.save(os.path.join(self.save_path, f'tar_hr_rec_min_loss_w.png'))
 
                 if len(self.sr_psnr_list) > 0 and max(self.sr_psnr_list) == self.tar_hr_psnr:
                     self.max_psnr_sr_iter = self.iter

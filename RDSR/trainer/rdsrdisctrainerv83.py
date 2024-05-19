@@ -11,12 +11,14 @@ from brisque import BRISQUE
 from networks.downsample import HaarDownsampling
 
 
+
 # remove haar wavlet
 class RDSRDiscTrainerV83(RDSRDiscTrainerV82):
-    def __init__(self, conf, tb_logger, test_dataloader, filename='', timestamp='', kernel=None):
+    def __init__(self, conf, tb_logger, test_dataloader, filename='', timestamp='', kernel=None, savePath=''):
         torch.manual_seed(conf.random_seed)
         super(RDSRDiscTrainerV83, self).__init__(conf, tb_logger, test_dataloader,
                                                  filename=filename, timestamp=timestamp, kernel=kernel)
+        # self.savePath = savePath
 
     def cal_whole_image_loss(self, is_dn=True):
         # This function is observed for overall target image quality
@@ -96,6 +98,7 @@ class RDSRDiscTrainerV83(RDSRDiscTrainerV82):
                     self.min_loss_sr_psnr = self.tar_hr_psnr
                     self.min_loss_sr_iter = self.iter
                     tar_hr_rec_w_img.save(os.path.join(self.save_path, 'tar_hr_rec_min_loss_w.png'))
+                    self.loss_logger.info(f'best_tar_hr_rec_min_loss_w at {self.iter}')
 
                 if len(self.sr_psnr_list) > 0 and max(self.sr_psnr_list) == self.tar_hr_psnr:
                     self.max_psnr_sr_iter = self.iter

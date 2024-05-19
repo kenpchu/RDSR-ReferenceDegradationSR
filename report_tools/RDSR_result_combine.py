@@ -42,7 +42,7 @@ def main():
         'eval-bad_0831.csv'
     ]
 
-    input_files = glob.glob('RDSR_analysis/official_x4/eval_*.csv')
+    input_files = glob.glob('/mnt/HDD1/phudh/super_resolution/RDSR-ReferenceDegradationSR/RDSR/train_loggers_phu/tuneDN_upNet_fixLearningrate_5ref_addlossLR_20240508-010107/eval_*.csv')
 
     # TODO: 1. add average
     # TODO: 2. support multi combine
@@ -105,7 +105,7 @@ def combine(paths):
 
 def main1():
     # eval_csv path
-    input_files = glob.glob('/mnt/HDD1/phudh/super_resolution/RDSR-ReferenceDegradationSR/RDSR/train_loggers/20240429-153225/eval_*.csv')
+    input_files = glob.glob('/mnt/HDD1/phudh/super_resolution/RDSR-ReferenceDegradationSR/RDSR/train_loggers_phu/baseline_bs_ref_1_20240516-115533/eval*.csv')
 
     eval_combine_path = combine(input_files)
     # time.sleep(1)
