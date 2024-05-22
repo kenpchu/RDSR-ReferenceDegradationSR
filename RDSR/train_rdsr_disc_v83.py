@@ -91,39 +91,40 @@ def train(conf, tb_logger, tar_path_list, ref_path_list, timestamp='', gt_tar=''
         trainer.set_baseline_img()
 
         # train Dn network
-        trainer.freeze_network(trainer.en_model)
-        trainer.freeze_network(trainer.sr_model)
-        if conf.pretrained_lr_path:
-            lr_model_path = lr_model_path_list[idx]
-            trainer.load_dn_model(lr_model_path)
-            trainer.logger.info(f'Load model {lr_model_path} for {os.path.basename(target_path)}')
-        else:
-            conf.train_iters = origin_iter
-            # TODO: [DOE] add downsample regularization
-            # multi_train_dataloader = gen_train_dataloader_adaptive(conf, target_path, ref_list)
-            dn_train_dataloader = gen_dn_train_dataloader(conf, target_path)
-            set_loader_seed(dn_train_dataloader, conf.random_seed)
-            # TODO: [DOE] add downsample regularization
-            # for ind, data_dict in enumerate(multi_train_dataloader):
-            conf.evaluate_iters = origin_evaluate_iters
-            for ind, data_dict in enumerate(dn_train_dataloader):
+        if not trainer.use_gt_k:
+            trainer.freeze_network(trainer.en_model)
+            trainer.freeze_network(trainer.sr_model)
+            if conf.pretrained_lr_path:
+                lr_model_path = lr_model_path_list[idx]
+                trainer.load_dn_model(lr_model_path)
+                trainer.logger.info(f'Load model {lr_model_path} for {os.path.basename(target_path)}')
+            else:
+                conf.train_iters = origin_iter
                 # TODO: [DOE] add downsample regularization
-                # trainer.set_input(data_dict)
-                trainer.set_dn_input(data_dict)
-                # trainer.save_input_img()
-                target_hr_base = trainer.get_target_baseline_result()
+                # multi_train_dataloader = gen_train_dataloader_adaptive(conf, target_path, ref_list)
+                dn_train_dataloader = gen_dn_train_dataloader(conf, target_path)
+                set_loader_seed(dn_train_dataloader, conf.random_seed)
                 # TODO: [DOE] add downsample regularization
-                trainer.start_train_dn(target_hr_base)
-                # trainer.start_train_dn_v2(target_hr_base)
-                tb_logger.flush()
+                # for ind, data_dict in enumerate(multi_train_dataloader):
+                conf.evaluate_iters = origin_evaluate_iters
+                for ind, data_dict in enumerate(dn_train_dataloader):
+                    # TODO: [DOE] add downsample regularization
+                    # trainer.set_input(data_dict)
+                    trainer.set_dn_input(data_dict)
+                    # trainer.save_input_img()
+                    target_hr_base = trainer.get_target_baseline_result()
+                    # TODO: [DOE] add downsample regularization
+                    trainer.start_train_dn(target_hr_base)
+                    # trainer.start_train_dn_v2(target_hr_base)
+                    tb_logger.flush()
 
-            trainer.save_model()
+                trainer.save_model()
 
-            # load best dn model from previous training
-            time.sleep(1)
-            best_dn_model_path = os.path.join(trainer.save_path, f'model_dn_{trainer.filename}_best.pt')
-            if os.path.exists(best_dn_model_path):
-                trainer.load_dn_model(best_dn_model_path)
+                # load best dn model from previous training
+                time.sleep(1)
+                best_dn_model_path = os.path.join(trainer.save_path, f'model_dn_{trainer.filename}_best.pt')
+                if os.path.exists(best_dn_model_path):
+                    trainer.load_dn_model(best_dn_model_path)
 
         # save ref_img
         # save_ref_img(ref_list, trainer.save_path)

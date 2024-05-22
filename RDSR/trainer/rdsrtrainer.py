@@ -391,7 +391,7 @@ class RDSRTrainer(RDSRBaseTrainer):
         with torch.no_grad():
             for test_data in self.test_loader:
                 ref_hr_w = test_data['Ref_Img']
-                ref_lr_rec_w = self.dn_model(ref_hr_w)
+                ref_lr_rec_w = self.dn_model(ref_hr_w) if not self.use_gt_k else self.dn_gt(ref_hr_w)
                 ref_dr = self.en_model(ref_lr_rec_w, ref_lr_rec_w)
                 ref_hr_rec_w = self.sr_model(ref_lr_rec_w, ref_dr)
                 ref_hr_psnr = calculate_psnr(ref_hr_rec_w, shave_a2b(ref_hr_w, ref_hr_rec_w))

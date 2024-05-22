@@ -38,11 +38,11 @@ class RDSRBaseTrainer(object):
 
         # [Customization] implement kernel preprocessing
         self.kernel = None
-        if kernel is not None:
-            self.init_kernel(kernel)
-            # kernel_t = torch.from_numpy(kernel).float().cuda()
-            # self.dn_by_kernel = DegradationProcessing(conf, kernel_t)
-            pass
+        # if kernel is not None:
+        #     self.init_kernel(kernel)
+        #     # kernel_t = torch.from_numpy(kernel).float().cuda()
+        #     # self.dn_by_kernel = DegradationProcessing(conf, kernel_t)
+        #     pass
 
         # input data initialize
         self.ref_hr = None

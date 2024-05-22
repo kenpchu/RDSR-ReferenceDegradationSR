@@ -45,7 +45,7 @@ class RDSRDiscTrainerV2(RDSRTrainer):
         self.optimizer_up_disc.step()
         self.up_disc_lr_scheduler.step()
 
-    def train_upsample(self, target_dr, target_hr_base, sr=False, en=True, matrix=False):
+    def train_upsample(self, target_dr, target_hr_base, sr=False, en=True, matrix=False, use_gt_k=False):
         set_requires_grad(self.up_disc_model, False)
         self.iter_step()
         self.sr_iter_step()
@@ -60,13 +60,13 @@ class RDSRDiscTrainerV2(RDSRTrainer):
             self.optimizer_Up.zero_grad()
 
         # TODO:compare results between train() and eval()
-        ref_rec_lr = self.dn_model(self.ref_hr)
+        ref_rec_lr = self.dn_model(self.ref_hr) if not use_gt_k else self.dn_gt(self.ref_hr)
         ref_rec_dr, _, _ = self.en_model(ref_rec_lr, ref_rec_lr)
         ref_rec_hr = self.sr_model(ref_rec_lr, ref_rec_dr)
 
         tar_lr_dr, _, _ = self.en_model(self.tar_lr, self.tar_lr)
         self.tar_hr_rec = self.sr_model(self.tar_lr, tar_lr_dr)
-        tar_lr_rec = self.dn_model(target_hr_base)
+        tar_lr_rec = self.dn_model(target_hr_base) if not use_gt_k else self.dn_gt(self.target_hr_base)
 
         loss_dr = self.l1_loss(ref_rec_dr, target_dr)
         loss_ref = self.l1_loss(ref_rec_hr, shave_a2b(self.ref_hr, ref_rec_hr))

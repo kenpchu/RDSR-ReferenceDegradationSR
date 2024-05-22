@@ -1,7 +1,8 @@
 {
     "random_seed": 0,
     "tb_name": "TIME",
-    "exp_name": "baseline_fixrandom",
+    "exp_name": "baseline_fix_bugloss",
+    "use_gt_k": 0,
     "input_crop_size": 128,
     "patch_size": 48,
     "train_iters": 3000,

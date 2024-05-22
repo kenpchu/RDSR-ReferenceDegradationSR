@@ -23,7 +23,7 @@ class RDSRDiscTrainerV8(RDSRDiscTrainerV3):
         self.brisque_min = 999999
         self.brisque_baseline = None
 
-    def train_upsample(self, target_dr, target_hr_base, sr=False, en=True, matrix=False):
+    def train_upsample(self, target_dr, target_hr_base, sr=False, en=True, matrix=False, use_gt_k=False):
         set_requires_grad(self.up_disc_model, False)
         self.iter_step()
         self.sr_iter_step()
@@ -37,7 +37,7 @@ class RDSRDiscTrainerV8(RDSRDiscTrainerV3):
         if sr:
             self.optimizer_Up.zero_grad()
 
-        ref_rec_lr = self.dn_model(self.ref_hr)
+        ref_rec_lr = self.dn_model(self.ref_hr) if not self.use_gt_k else self.dn_gt(self.ref_hr)
         # ref_rec_lr_r = ref_rec_lr[:, 0, ...].unsqueeze(1)
         # ref_rec_lr_g = ref_rec_lr[:, 1, ...].unsqueeze(1)
         # ref_rec_lr_b = ref_rec_lr[:, 2, ...].unsqueeze(1)
@@ -51,16 +51,17 @@ class RDSRDiscTrainerV8(RDSRDiscTrainerV3):
 
         tar_lr_dr, _, _ = self.en_model(self.tar_lr, self.tar_lr)
         self.tar_hr_rec = self.sr_model(self.tar_lr, tar_lr_dr)
-        tar_lr_rec = self.dn_model(target_hr_base)
+        tar_lr_rec = self.dn_model(self.tar_hr_rec) if not self.use_gt_k else self.dn_gt(self.tar_hr_rec)
 
         loss_dr = self.l1_loss(ref_rec_dr, target_dr)
         loss_ref = self.l1_loss(ref_rec_hr, shave_a2b(self.ref_hr, ref_rec_hr))
+        loss_tar = self.l1_loss(tar_lr_rec, shave_a2b(self.tar_lr, tar_lr_rec))
 
-        total_loss = loss_ref * self.conf.ref_lambda
-        total_loss += loss_dr * self.conf.dr_lambda
-        loss_tar_sr = self.l1_loss(self.tar_hr_rec, target_hr_base)
+        total_loss = loss_ref * self.conf.ref_lambda + loss_dr * self.conf.dr_lambda + loss_tar*self.conf.target_lambda
 
-        loss_tar_lr = self.l1_loss(tar_lr_rec, shave_a2b(self.tar_lr, tar_lr_rec))
+        # loss_tar_sr = self.l1_loss(self.tar_hr_rec, target_hr_base)
+
+        # loss_tar_lr = self.l1_loss(tar_lr_rec, shave_a2b(self.tar_lr, tar_lr_rec))
 
         loss_gan = 0
         if self.conf.gan_lambda != 0:
@@ -78,36 +79,36 @@ class RDSRDiscTrainerV8(RDSRDiscTrainerV3):
             total_loss += loss_ref_vgg * self.conf.vgg_ref_lambda
 
         # The purpose is for bounding baseline result
-        if self.sr_iter < self.conf.target_thres:
-            total_loss += loss_tar_sr * self.conf.target_lambda
-            total_loss += loss_tar_lr
+        # if self.sr_iter < self.conf.target_thres:
+        #     total_loss += loss_tar_sr * self.conf.target_lambda
+        #     total_loss += loss_tar_lr
 
-        loss_interpo = 0
-        if self.conf.interpo_lambda != 0:
-            loss_interpo = self.interpo_loss.forward(self.tar_lr, self.tar_hr_rec)
-            total_loss += loss_interpo * self.conf.interpo_lambda
+        # loss_interpo = 0
+        # if self.conf.interpo_lambda != 0:
+        #     loss_interpo = self.interpo_loss.forward(self.tar_lr, self.tar_hr_rec)
+        #     total_loss += loss_interpo * self.conf.interpo_lambda
 
-        loss_tv = 0
-        if self.conf.tv_lambda != 0:
-            loss_tv = self.tv_loss.forward(self.tar_hr_rec)
-            total_loss += loss_tv * self.conf.tv_lambda
+        # loss_tv = 0
+        # if self.conf.tv_lambda != 0:
+        #     loss_tv = self.tv_loss.forward(self.tar_hr_rec)
+        #     total_loss += loss_tv * self.conf.tv_lambda
 
-        loss_color = 0
-        if self.conf.color_lambda != 0:
-            loss_color = self.color_loss.forward(self.tar_lr, self.tar_hr_rec)
-            total_loss += loss_color * self.conf.color_lambda
+        # loss_color = 0
+        # if self.conf.color_lambda != 0:
+        #     loss_color = self.color_loss.forward(self.tar_lr, self.tar_hr_rec)
+        #     total_loss += loss_color * self.conf.color_lambda
 
-        # Add high frequency loss
-        loss_hf = 0
-        if self.conf.hf_lambda != 0:
-            loss_hf = self.hf_loss.forward(shave_a2b(self.ref_hr, ref_rec_hr), ref_rec_hr)
-            # loss_hf2 = self.hf_loss2.forward(shave_a2b(self.ref_hr, ref_rec_hr), ref_rec_hr)
-            total_loss += loss_hf * self.conf.hf_lambda
+        # # Add high frequency loss
+        # loss_hf = 0
+        # if self.conf.hf_lambda != 0:
+        #     loss_hf = self.hf_loss.forward(shave_a2b(self.ref_hr, ref_rec_hr), ref_rec_hr)
+        #     # loss_hf2 = self.hf_loss2.forward(shave_a2b(self.ref_hr, ref_rec_hr), ref_rec_hr)
+        #     total_loss += loss_hf * self.conf.hf_lambda
 
-        loss_ref_gv = 0
-        if self.conf.gv_ref_lambda != 0:
-            loss_ref_gv = self.GV_loss.forward(shave_a2b(self.ref_hr, ref_rec_hr), ref_rec_hr)
-            total_loss += loss_ref_gv * self.conf.gv_ref_lambda
+        # loss_ref_gv = 0
+        # if self.conf.gv_ref_lambda != 0:
+        #     loss_ref_gv = self.GV_loss.forward(shave_a2b(self.ref_hr, ref_rec_hr), ref_rec_hr)
+        #     total_loss += loss_ref_gv * self.conf.gv_ref_lambda
 
         if self.iter % self.conf.scale_iters == 0:
             self.logger.info(f'SR Total Loss: {self.iter}, total_loss: {total_loss}')
@@ -242,7 +243,7 @@ class RDSRDiscTrainerV8(RDSRDiscTrainerV3):
             tar_img = tensor2im(self.tar_lr)
             tar_hr_rec_img = tensor2im(tar_hr_rec)
             tar_lr_rec_img = tensor2im(tar_lr_rec)
-            curr_k_np = calc_curr_k(self.dn_model.parameters()).detach().cpu().numpy()
+            curr_k_np = calc_curr_k(self.dn_model.parameters()).detach().cpu().numpy() if not self.use_gt_k else self.kernel
             target_hr_base_img = tensor2im(target_hr_base)
 
 

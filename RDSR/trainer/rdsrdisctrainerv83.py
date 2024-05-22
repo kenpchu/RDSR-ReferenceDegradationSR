@@ -21,6 +21,7 @@ class RDSRDiscTrainerV83(RDSRDiscTrainerV82):
         if kernel: 
             self.kernel = scipy.io.loadmat(kernel)['Kernel']
 
+        self.use_gt_k = True if conf.use_gt_k !=0 else False
     
 
 
@@ -120,9 +121,9 @@ class RDSRDiscTrainerV83(RDSRDiscTrainerV82):
             torch.cuda.empty_cache()
 
             # DownSample with SR result
-            self.tar_rec_lr_w = self.dn_model(self.tar_hr_rec_w)
+            self.tar_rec_lr_w = self.dn_model(self.tar_hr_rec_w) if not self.use_gt_k else self.dn_gt(self.tar_hr_rec_w)
             # DownSample with GT
-            self.tar_gt_rec_lr_w = self.dn_model(self.tar_hr_gt_w)
+            self.tar_gt_rec_lr_w = self.dn_model(self.tar_hr_gt_w) if not self.use_gt_k else self.dn_gt(self.tar_hr_gt_w)
 
             # dual cycle training
             tar_rec_lr_dr = self.en_model(self.tar_rec_lr_w, self.tar_rec_lr_w)
@@ -135,7 +136,7 @@ class RDSRDiscTrainerV83(RDSRDiscTrainerV82):
         # GT kernel PSNR
         if self.conf.kernel_gt_dir:
             if self.curr_k is None:
-                self.curr_k = calc_curr_k(self.dn_model.parameters())
+                self.curr_k = calc_curr_k(self.dn_model.parameters()) if not self.use_gt_k else self.kernel
             self.gt_kernel_psnr = calculate_psnr3(self.curr_k, self.kernel)
 
         if not is_dn:
