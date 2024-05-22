@@ -49,6 +49,8 @@ def make_3ch(im):
 
 def move2cpu(d):
     """Move data from gpu to cpu"""
+    if isinstance(d, np.ndarray): 
+        return d
     return d.detach().cpu().float().numpy()
 
 
@@ -208,6 +210,8 @@ def calculate_psnr3(img1, img2):
     This calculation is from IKENet
     '''
     # img1 and img2 have range [0, 255]
+    if img1.shape != img2.shape:
+        img1 = F.interpolate(img1.unsqueeze(0).unsqueeze(0), size=(img2.shape[0], img2.shape[1]), mode='bilinear', align_corners=False).squeeze()
     img1 = move2cpu(img1)
     img2 = move2cpu(img2)
     img1 = img1.astype(np.float64)

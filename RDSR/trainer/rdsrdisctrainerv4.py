@@ -416,7 +416,7 @@ class RDSRDiscTrainerV4(RDSRDiscTrainerV3):
 
     def save_model(self, best=False, dn_model=True, name=''):
         if self.timestamp:
-            output_path = os.path.join(self.conf.train_log, self.timestamp, self.filename)
+            output_path = os.path.join(self.conf.train_log, f'{self.conf.exp_name}_{self.timestamp}', self.filename)
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
             self.save_path = output_path

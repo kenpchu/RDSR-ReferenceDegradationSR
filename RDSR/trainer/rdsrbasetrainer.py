@@ -25,7 +25,7 @@ class RDSRBaseTrainer(object):
         self.tb_logger = tb_logger
         # Log Path settings
         self.timestamp = timestamp
-        self.save_path = os.path.join(self.train_log_name, timestamp, filename)
+        self.save_path = os.path.join(self.train_log_name, f'{conf.exp_name}_{timestamp}', filename)
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
 
@@ -584,7 +584,7 @@ class RDSRBaseTrainer(object):
     # save model & images
     def save_model(self, best=False, dn_model=True):
         if self.timestamp:
-            output_path = os.path.join(self.conf.train_log, self.timestamp, self.filename)
+            output_path = os.path.join(self.conf.train_log, f'{self.conf.exp_name}_{self.timestamp}', self.filename)
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
             self.save_path = output_path

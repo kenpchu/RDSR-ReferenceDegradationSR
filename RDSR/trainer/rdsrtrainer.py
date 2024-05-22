@@ -1,5 +1,6 @@
 import torch
 import os
+import numpy as np
 
 from trainer.rdsrbasetrainer import RDSRBaseTrainer
 from utils.img_utils import DownScale, kernel_preprocessing, DegradationProcessing
@@ -10,6 +11,7 @@ from networks.upsample import make_dasr_network
 from networks.downsample import make_downsample_network, make_downsample_x4_network
 from loss.dnloss import DownSampleRegularization
 from loss.loss import CharbonnierLossV2
+import matplotlib.pyplot as plt
 
 
 class RDSRTrainer(RDSRBaseTrainer):
@@ -77,6 +79,7 @@ class RDSRTrainer(RDSRBaseTrainer):
         self.save_img(self.ref_hr, 'ref_hr')
         self.save_img(self.tar_lr, 'tar_lr')
 
+    
     def start_train_dn(self, target_hr_base):
         self.iter_step()
 
@@ -120,13 +123,43 @@ class RDSRTrainer(RDSRBaseTrainer):
         self.update_matrix_dn_lrs(total_loss)
 
         if self.iter % self.conf.plot_iters == 0:
-            tar_img = Image.fromarray(tensor2im(self.tar_lr))
-            tar_hr_img = Image.fromarray(tensor2im(target_hr_base))
-            tar_rec_lr_img = Image.fromarray(tensor2im(tar_rec_lr))
+            tar_img = tensor2im(self.tar_lr)
+            target_hr_base_img = tensor2im(target_hr_base)
+            tar_rec_lr_img = tensor2im(tar_rec_lr)
+            curr_k_np = self.curr_k.detach().cpu().numpy()
 
-            tar_img.save(os.path.join(self.save_path, 'tar_img.png'))
-            tar_hr_img.save(os.path.join(self.save_path, 'tar_hr_img.png'))
-            tar_rec_lr_img.save(os.path.join(self.save_path, 'tar_lr_rec.png'))
+
+            fig, axs = plt.subplots(2, 3, figsize=(15, 8))
+
+            # Plot the first kernel
+            axs[0,0].imshow(curr_k_np, cmap='gray')
+            axs[0,0].set_title(f'curr_K_{curr_k_np.shape}')
+            axs[0,0].axis('off')
+
+            # Plot the second kernel
+            axs[0,1].imshow(self.kernel, cmap='gray')
+            axs[0,1].set_title(f'GT_K_{self.kernel.shape}')
+            axs[0,1].axis('off')
+
+            axs[0,2].imshow(tar_img)
+            axs[0,2].set_title(f'tar_img_{tar_img.shape}')
+            axs[0,2].axis('off')
+            
+            axs[1,0].imshow(target_hr_base_img)
+            axs[1,0].set_title(f'target_hr_base_{target_hr_base_img.shape}')
+            axs[1,0].axis('off')
+
+            axs[1,1].imshow(tar_rec_lr_img)
+            axs[1,1].set_title(f'tar_rec_lr_img_{tar_rec_lr_img.shape}')
+            axs[1,1].axis('off')
+
+            filename = os.path.join(self.save_path, f'{self.iter}_kernel_{self.conf.scale}_dn.png' )
+            plt.savefig(filename)
+            plt.close()
+
+            # tar_img.save(os.path.join(self.save_path, 'tar_img.png'))
+            # tar_hr_img.save(os.path.join(self.save_path, 'tar_hr_img.png'))
+            # tar_rec_lr_img.save(os.path.join(self.save_path, 'tar_lr_rec.png'))
             # self.dn_model_evaluation()
             self.dn_model.eval()
             self.dn_evaluation()

@@ -103,7 +103,7 @@ def create_train_logger2(timestamp, train_log_name):
 
 def dump_training_settings(conf, timestamp):
     # dump config to dictionary
-    train_folder = os.path.join(conf.train_log, timestamp)
+    train_folder = os.path.join(conf.train_log, f'{conf.exp_name}_{timestamp}')
     conf_dict = dict()
     for arg in vars(conf):
         conf_dict[arg] = getattr(conf, arg)

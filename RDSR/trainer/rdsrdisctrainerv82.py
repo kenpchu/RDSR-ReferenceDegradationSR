@@ -10,7 +10,7 @@ from PIL import Image
 from brisque import BRISQUE
 from networks.downsample import HaarDownsampling
 
-
+import matplotlib.pyplot as plt
 # remove haar wavlet
 class RDSRDiscTrainerV8(RDSRDiscTrainerV3):
     def __init__(self, conf, tb_logger, test_dataloader, filename='', timestamp='', kernel=None):
@@ -115,7 +115,7 @@ class RDSRDiscTrainerV8(RDSRDiscTrainerV3):
         total_loss.backward()
         self.update_learner(sr=sr, en=en, matrix=matrix)
 
-        self.plot_eval(ref_rec_lr, ref_rec_hr, ref_rec_dr, self.tar_hr_rec, tar_lr_rec)
+        self.plot_eval(ref_rec_lr, ref_rec_hr, ref_rec_dr, self.tar_hr_rec, tar_lr_rec, target_hr_base)
         if self.iter % self.conf.evaluate_iters == 0:
             self.cal_whole_image_loss(is_dn=False)
             self.show_learning_rate()
@@ -231,8 +231,65 @@ class RDSRDiscTrainerV8(RDSRDiscTrainerV3):
 
                 # self.save_whole_image(is_dn=False)
 
-    def plot_eval(self, ref_rec_lr, ref_rec_hr, ref_dr, tar_hr_rec, tar_lr_rec):
+    def plot_eval(self, ref_rec_lr, ref_rec_hr, ref_dr, tar_hr_rec, tar_lr_rec, target_hr_base):
         if self.iter % self.conf.evaluate_iters == 0:
+            # ref branch 
+            ref_img = tensor2im(self.ref_hr)
+            ref_rec_lr_img = tensor2im(ref_rec_lr)
+            ref_rec_hr_img = tensor2im(ref_rec_hr)
+
+            # tar branch
+            tar_img = tensor2im(self.tar_lr)
+            tar_hr_rec_img = tensor2im(tar_hr_rec)
+            tar_lr_rec_img = tensor2im(tar_lr_rec)
+            curr_k_np = calc_curr_k(self.dn_model.parameters()).detach().cpu().numpy()
+            target_hr_base_img = tensor2im(target_hr_base)
+
+
+            # save image
+            fig, axs = plt.subplots(3, 3, figsize=(15, 10))
+            axs[0,0].imshow(ref_img)
+            axs[0,0].set_title(f'ref_img_{ref_img.shape}')
+            axs[0,0].axis('off')
+
+            axs[0,1].imshow(ref_rec_lr_img)
+            axs[0,1].set_title(f'ref_rec_lr_img_{ref_rec_lr_img.shape}')
+            axs[0,1].axis('off')
+
+            axs[0,2].imshow(ref_rec_hr_img)
+            axs[0,2].set_title(f'ref_rec_hr_img_{ref_rec_hr_img.shape}')
+            axs[0,2].axis('off')
+
+            axs[1,0].imshow(tar_img)
+            axs[1,0].set_title(f'tar_img_{tar_img.shape}')
+            axs[1,0].axis('off')
+
+            axs[1,1].imshow(tar_hr_rec_img)
+            axs[1,1].set_title(f'tar_hr_rec_img_{tar_hr_rec_img.shape}')
+            axs[1,1].axis('off')
+
+            axs[1,2].imshow(tar_lr_rec_img)
+            axs[1,2].set_title(f'tar_lr_rec_img{tar_lr_rec_img.shape}')
+            axs[1,2].axis('off')
+
+            axs[2,0].imshow(target_hr_base_img)
+            axs[2,0].set_title(f'target_hr_base_img_{target_hr_base_img.shape}')
+            axs[2,0].axis('off')
+
+            # Plot the second kernel
+            axs[2,1].imshow(curr_k_np, cmap='gray')
+            axs[2,1].set_title(f'curr_k_{curr_k_np.shape}')
+            axs[2,1].axis('off')
+
+            axs[2,2].imshow(self.kernel, cmap='gray')
+            axs[2,2].set_title(f'GT_K_{self.kernel.shape}')
+            axs[2,2].axis('off')
+
+            filename = os.path.join(self.save_path, f'{self.iter}_kernel_{self.conf.scale}_UP.png' ) 
+            plt.savefig(filename)
+            plt.close()
+
+
             if hasattr(self.dn_model, 'parameters'):
                 self.dn_model.eval()
             self.en_model.eval()

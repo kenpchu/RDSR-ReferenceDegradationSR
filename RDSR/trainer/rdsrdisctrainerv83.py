@@ -9,7 +9,7 @@ from utils.utils import set_requires_grad
 from PIL import Image
 from brisque import BRISQUE
 from networks.downsample import HaarDownsampling
-
+import scipy.io
 
 # remove haar wavlet
 class RDSRDiscTrainerV83(RDSRDiscTrainerV82):
@@ -17,6 +17,12 @@ class RDSRDiscTrainerV83(RDSRDiscTrainerV82):
         torch.manual_seed(conf.random_seed)
         super(RDSRDiscTrainerV83, self).__init__(conf, tb_logger, test_dataloader,
                                                  filename=filename, timestamp=timestamp, kernel=kernel)
+
+        if kernel: 
+            self.kernel = scipy.io.loadmat(kernel)['Kernel']
+
+    
+
 
     def cal_whole_image_loss(self, is_dn=True):
         # This function is observed for overall target image quality

@@ -1,6 +1,7 @@
 {
     "random_seed": 0,
     "tb_name": "TIME",
+    "exp_name": "baseline_fixrandom",
     "input_crop_size": 128,
     "patch_size": 48,
     "train_iters": 3000,
@@ -84,7 +85,7 @@
     "tsne_img_count": 50,
     "tsne_ker_count": 5,
     "target_ind": 0,
-    "target_count": 2,
+    "target_count": 10,
     "ref_selection": 1,
     "rgb_range": 1.0,
     "is_normalize": 1,

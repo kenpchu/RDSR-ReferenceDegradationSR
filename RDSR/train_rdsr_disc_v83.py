@@ -15,11 +15,19 @@ import time
 import torch
 import numpy as np
 
-# torch.backends.cudnn.benchmark=False
-# torch.use_deterministic_algorithms(True)
-# torch.manual_seed(0)
-# random.seed(0)
-# np.random.seed(0)
+seed = 24
+torch.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
+np.random.seed(seed)
+random.seed(seed)
+os.environ["PYTHONHASHSEED"] = str(seed)
+if True:  # slower, more reproducible
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+else:  # faster, less reproducible
+    torch.backends.cudnn.deterministic = False
+    torch.backends.cudnn.benchmark = True
+
 import os
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:512"
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":16:8"
@@ -205,7 +213,7 @@ def main():
         print(','.join(select_ref_list))
     # create timestamp and logger
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-    create_train_logger(timestamp, conf.train_log)
+    create_train_logger(f'{conf.exp_name}_{timestamp}', conf.train_log)
     tb_logger = create_TBlogger(conf)
 
     # dump training configuration to files
